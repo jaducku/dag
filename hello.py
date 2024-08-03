@@ -26,9 +26,7 @@ with DAG(
     default_args=default_args,
     description='A simple hello world DAG',
     schedule_interval=None,  # 스케줄링 없음
-    schedule_interval=timedelta(seconds=1),
-    max_active_runs=50,
-    catchup=False,
+    max_active_runs=50
 ) as dag:
 
     # 작업 정의
