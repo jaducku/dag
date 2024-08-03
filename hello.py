@@ -17,8 +17,9 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
-    'max_active_runs': 50,
-    'retry_delay': timedelta(minutes=5),
+    'max_active_runs': 20,
+    'schedule_interval':imedelta(seconds=1),
+    'catchup':False,
 }
 
 # DAG 정의
