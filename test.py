@@ -1,5 +1,5 @@
 from airflow import DAG
-from airflow.operators.bash import BashOperator
+from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime
 
 # DAG 설정
@@ -13,16 +13,13 @@ default_args = {
 }
 
 dag = DAG(
-    'triggered_jar_execution',
+    'example_dag',
     default_args=default_args,
-    description='A DAG that runs a JAR file triggered externally',
-    schedule_interval=None,  # 스케줄링 없음
-    catchup=False,
+    description='An example DAG',
+    schedule_interval='@daily',
 )
 
-# BashOperator를 사용하여 JAR 파일 실행
-run_jar = BashOperator(
-    task_id='run_jar',
-    bash_command='java -jar /path/to/your/file.jar',
-    dag=dag,
-)
+start = DummyOperator(task_id='start', dag=dag)
+end = DummyOperator(task_id='end', dag=dag)
+
+start >> end
