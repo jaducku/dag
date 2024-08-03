@@ -6,7 +6,7 @@ import time
 # 함수 정의
 def say_hello():
     print("hello")
-    time.sleep(2)
+    time.sleep(1)
     print("Completed")
 
 # 기본 인수 정의
