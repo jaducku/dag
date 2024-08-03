@@ -17,6 +17,7 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
+    'max_active_runs': 50,
     'retry_delay': timedelta(minutes=5),
 }
 
@@ -25,7 +26,7 @@ with DAG(
     'hello_world_dag',
     default_args=default_args,
     description='A simple hello world DAG',
-    schedule_interval=timedelta(days=1),
+    schedule_interval=None,  # 스케줄링 없음
 ) as dag:
 
     # 작업 정의
