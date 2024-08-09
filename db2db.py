@@ -19,7 +19,7 @@ dag = DAG(
     'db2db',
     default_args=default_args,
     description='A DAG to dynamically skip running tasks using BranchPythonOperator',
-    schedule_interval=timedelta(minutes=10),
+    schedule_interval='*/1 * * * *',
     start_date=days_ago(1),
     catchup=False,
 )
