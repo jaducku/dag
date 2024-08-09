@@ -26,7 +26,7 @@ def choose_branch(task_id, **kwargs):
     ti = TaskInstance(kwargs['dag'].get_task(task_id), kwargs['execution_date'])
     ti.refresh_from_db()
 
-    if ti.state in [State.RUNNING, State.SUCCESS]:
+    if ti.state in [State.RUNNING, State.QUEUED]:
         return f'skip_{task_id}'
     else:
         return task_id
