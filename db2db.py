@@ -5,12 +5,13 @@ from airflow.utils.dates import days_ago
 from airflow.models import TaskInstance
 from airflow.utils.state import State
 from datetime import datetime, timedelta
+import time
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(minutes=1),
 }
 
 dag = DAG(
@@ -32,6 +33,7 @@ def choose_branch(task_id, **kwargs):
         return task_id
 
 def my_task(task_number, **kwargs):
+    time.sleep(random.randint(40, 90))
     print(f"Executing task number {task_number}")
 
 # 시작 태스크
