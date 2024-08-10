@@ -23,6 +23,7 @@ with DAG(
     default_args=default_args,
     schedule_interval='*/1 * * * *',  # 1분마다 실행
     catchup=False,
+    max_active_runs=1,
 ) as dag:
     
     start = DummyOperator(
