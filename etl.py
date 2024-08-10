@@ -1,61 +1,35 @@
-
-from airflow import DAG
-from airflow import settings
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import PythonOperator
-from airflow.utils.trigger_rule import TriggerRule
-from datetime import datetime, timedelta
-from airflow.models import DagRun, TaskInstance
+from airflow.models import BaseOperator, TaskInstance
+from airflow.utils.db import provide_session
+from airflow.exceptions import AirflowSkipException
 from airflow.utils.state import State
-from sqlalchemy.orm import joinedload
-import time
-import random
 
-# DAG Define
-dag_name = 'db2db_etl_lot_history'
-running_tasks = {}
+class SkipIfRunningOperator(BaseOperator):
 
-def get_running_tasks_at_dat():
-    session = settings.Session()
+    @provide_session
+    def execute(self, context, session=None):
+        task_instance = session.query(TaskInstance).filter(
+            TaskInstance.dag_id == self.dag_id,
+            TaskInstance.task_id == self.task_id,
+            TaskInstance.execution_date == context['execution_date'],
+            TaskInstance.state == State.RUNNING
+        ).first()
 
-    running_tasks = session.query(TaskInstance).join(DagRun, DagRun.execution_date == TaskInstance.execution_date).filter(
-        TaskInstance.dag_id == dag_name,
-        TaskInstance.state in [State.RUNNING,State.QUEUED,State.SCHEDULED],
-        DagRun.dag_id == TaskInstance.dag_id
-    ).options(joinedload(TaskInstance.dag_run)).all()
+        if task_instance:
+            raise AirflowSkipException(f"Task {self.task_id} is already running, skipping.")
 
-def etl_main(task_id):
-    if any(task.task_id == task_id for task in running_tasks):
-        print(f'hello {task_id}')
-        time.sleep(random.uniform(1, 90))
-    else:
-        print(f'task is running now : {task_id}')
+        # 실제 Task 수행할 작업 (Task가 실행 중이지 않은 경우에만 수행)
+        # task_logic()
 
-default_args = {
-    'owner': 'airflow',
-    'start_date': datetime(2023, 8, 10),
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-}
+with DAG('dynamic_task_skip_example',
+         start_date=days_ago(1),
+         schedule_interval='*/1 * * * *') as dag:
 
-# DAG 정의
-with DAG(
-    dag_name,
-    default_args=default_args,
-    description='A simple hello world DAG',
-    schedule_interval='*/1 * * * *',
-) as dag:
-
-    start = DummyOperator(
-        task_id='start',
-    )
+    tasks = []
+    task_ids = ['task_1', 'task_2', 'task_3']
     
-    for i in range(5):  # 예시로 5개의 태스크를 동적으로 생성
-        task_id = f'{dag_name}_task_{i}'
-        task = PythonOperator(
+    for task_id in task_ids:
+        task = SkipIfRunningOperator(
             task_id=task_id,
-            python_callable=etl_main,
-            op_args=[task_id],
+            dag=dag
         )
-        
-        start >> task
+        tasks.append(task)
