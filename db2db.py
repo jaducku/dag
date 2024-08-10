@@ -5,6 +5,7 @@ from airflow.utils.dates import days_ago
 from airflow.models import TaskInstance
 from airflow.utils.state import State
 from datetime import datetime, timedelta
+from airflow.utils.trigger_rule import TriggerRule
 import time
 import random
 
@@ -34,6 +35,7 @@ start = DummyOperator(
     dag=dag,
 )
 
+sub_tasks = []
 for i in range(10):
     task_id = f'task_{i}'
 
@@ -44,10 +46,14 @@ for i in range(10):
         dag=dag,
     )
 
+    sub_tasks.append(etl_main)
+    start >> etl_main
+
 end = DummyOperator(
     task_id='end',
     dag=dag,
-    trigger_rule='all_done',
+    rigger_rule=TriggerRule.ALL_DONE
 )
 
-start >> etl_main >> end
+for task in sub_tasks:
+    task >> end
