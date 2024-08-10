@@ -3,7 +3,8 @@ from airflow.operators.python_operator import PythonOperator, BranchPythonOperat
 from airflow.utils.dates import days_ago
 from airflow.utils.state import State
 from airflow.models import TaskInstance
-
+import time
+import random
 # Task 상태를 직접 확인하는 함수
 def check_task_state(task_id, **kwargs):
     dag_run = kwargs['dag_run']
@@ -21,6 +22,7 @@ def check_task_state(task_id, **kwargs):
 # 개별 Task 실행 함수
 def execute_task(task_id, **kwargs):
     print(f"Executing {task_id}")
+    time.sleep(random.uniform(40, 90))
 
 # Skip될 때 사용하는 Dummy 함수
 def skip_task(**kwargs):
