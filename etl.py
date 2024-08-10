@@ -4,7 +4,8 @@ from airflow.utils.dates import days_ago
 from airflow.models import TaskInstance
 from airflow.utils.state import State
 from airflow.exceptions import AirflowSkipException
-
+import time
+import random
 # 전체 Task 상태 조회 함수
 def check_task_states(**context):
     ti = context['ti']
@@ -33,6 +34,7 @@ def execute_task(task_id, **context):
 
     # 여기서 실제 작업 수행
     print(f"Executing {task_id}")
+    time.sleep(random.uniform(40, 90))
 
 with DAG('dag_dynamic_task_skip',
          start_date=days_ago(1),
