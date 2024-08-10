@@ -24,7 +24,7 @@ def use_memory_and_time(task_id):
     print(f"Task {task_id} completed.")
 
 with DAG(
-    'my_dynamic_dag_with_memory_and_random_time',
+    'last-dag',
     default_args=default_args,
     schedule_interval='*/1 * * * *',  # 1분마다 실행
     catchup=False,
