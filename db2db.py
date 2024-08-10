@@ -12,7 +12,7 @@ default_args = {
 }
 
 def my_task(task_id):
-    large_list = [0.0] * 75_000_000
+    large_list = [0.0] * 3_750_000
     print(f"Task {task_id} executed")
 
 with DAG(
