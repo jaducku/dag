@@ -27,7 +27,7 @@ with DAG(
     )
     
     dynamic_tasks = []
-    for i in range(5):  # 예시로 5개의 태스크를 동적으로 생성
+    for i in range(20):  # 예시로 5개의 태스크를 동적으로 생성
         task = PythonOperator(
             task_id=f'main_task_{i}',
             python_callable=my_task,
