@@ -1,64 +1,61 @@
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
 from airflow.utils.dates import days_ago
-from airflow.models import TaskInstance
 from airflow.utils.state import State
-from airflow.exceptions import AirflowSkipException
-import time
-import random
-def check_task_states(**kwargs):
-    ti = kwargs['ti']
-    dag_run = kwargs['dag_run']
-    all_tasks = dag_run.get_task_instances()
-    
-    running_tasks = [task.task_id for task in all_tasks if task.state == State.RUNNING]
-    
-    # RUNNING 상태의 Task ID 리스트를 XCom으로 저장
-    ti.xcom_push(key='running_tasks', value=running_tasks)
+from airflow.models import TaskInstance
 
-# XCom 데이터 삭제 함수
-def clear_xcom(**kwargs):
-    ti = kwargs['ti']
-    # 해당 Task ID와 관련된 XCom 데이터를 삭제합니다.
-    ti.xcom_delete(key='running_tasks')
+# Task 상태를 직접 확인하는 함수
+def check_task_state(task_id, **kwargs):
+    dag_run = kwargs['dag_run']
+    task_instances = dag_run.get_task_instances()
+
+    # 각 Task의 상태를 확인
+    for task_instance in task_instances:
+        if task_instance.task_id == task_id and task_instance.state == State.RUNNING:
+            # Task가 RUNNING 상태면 Skip 경로로 이동
+            return f"skip_{task_id}"
+    
+    # 그렇지 않으면 실행 경로로 이동
+    return task_id
 
 # 개별 Task 실행 함수
 def execute_task(task_id, **kwargs):
-    ti = kwargs['ti']
-    running_tasks = ti.xcom_pull(key='running_tasks', task_ids='check_running_tasks')
-    
-    if task_id in running_tasks:
-        raise AirflowSkipException(f"Task {task_id} is already running, skipping.")
-
-    # 여기서 실제 작업 수행
     print(f"Executing {task_id}")
-    time.sleep(random.uniform(10, 90))
 
-with DAG('dag_dynamic_task_skip',
+# Skip될 때 사용하는 Dummy 함수
+def skip_task(**kwargs):
+    print("Task skipped.")
+
+with DAG('dag_branch_operator_no_xcom',
          start_date=days_ago(1),
          schedule_interval="@daily") as dag:
-
-    # 전체 Task 상태를 체크하는 Task
-    check_running_tasks = PythonOperator(
-        task_id='check_running_tasks',
-        python_callable=check_task_states,
-        provide_context=True,
-        dag=dag
-    )
 
     # 동적으로 생성되는 Task
     task_ids = ['task_1', 'task_2', 'task_3']
     tasks = []
 
     for task_id in task_ids:
+        branch = BranchPythonOperator(
+            task_id=f'branch_{task_id}',
+            python_callable=check_task_state,
+            op_args=[task_id],
+            provide_context=True,
+            dag=dag
+        )
+
         task = PythonOperator(
             task_id=task_id,
             python_callable=execute_task,
             op_args=[task_id],
             provide_context=True,
-            on_success_callback=clear_xcom,  # Task 성공 시 XCom 삭제
-            on_failure_callback=clear_xcom,  # Task 실패 시 XCom 삭제
             dag=dag
         )
+
+        skip = PythonOperator(
+            task_id=f'skip_{task_id}',
+            python_callable=skip_task,
+            dag=dag
+        )
+
         tasks.append(task)
-        check_running_tasks >> task
+        branch >> [task, skip]
