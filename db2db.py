@@ -1,59 +1,44 @@
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import days_ago
-from airflow.models import TaskInstance
-from airflow.utils.state import State
-from datetime import datetime, timedelta
+from airflow.operators.python_operator import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
-import time
-import random
+from datetime import datetime, timedelta
 
 default_args = {
     'owner': 'airflow',
-    'depends_on_past': False,
+    'start_date': datetime(2023, 8, 10),
     'retries': 1,
-    'retry_delay': timedelta(minutes=1),
+    'retry_delay': timedelta(minutes=5),
 }
 
-dag = DAG(
-    'db2db',
+def my_task(task_id):
+    print(f"Task {task_id} executed")
+
+with DAG(
+    'my_dynamic_dag',
     default_args=default_args,
-    description='A DAG to dynamically skip running tasks using BranchPythonOperator',
-    schedule_interval='*/1 * * * *',
-    start_date=days_ago(1),
+    schedule_interval='*/1 * * * *',  # 1분마다 실행
     catchup=False,
-)
-
-def my_task(task_number, **kwargs):
-    time.sleep(random.randint(40, 90))
-    print(f"Executing task number {task_number}")
-
-# 시작 태스크
-start = DummyOperator(
-    task_id='start',
-    dag=dag,
-)
-
-sub_tasks = []
-for i in range(10):
-    task_id = f'task_{i}'
-
-    etl_main = PythonOperator(
-        task_id=task_id,
-        python_callable=my_task,
-        op_kwargs={'task_number': i},
-        dag=dag,
+) as dag:
+    
+    start = DummyOperator(
+        task_id='start',
     )
-
-    sub_tasks.append(etl_main)
-    start >> etl_main
-
-end = DummyOperator(
-    task_id='end',
-    dag=dag,
-    rigger_rule=TriggerRule.ALL_DONE
-)
-
-for task in sub_tasks:
-    task >> end
+    
+    dynamic_tasks = []
+    for i in range(5):  # 예시로 5개의 태스크를 동적으로 생성
+        task = PythonOperator(
+            task_id=f'main_task_{i}',
+            python_callable=my_task,
+            op_args=[i],
+        )
+        dynamic_tasks.append(task)
+        start >> task
+    
+    complete = DummyOperator(
+        task_id='complete',
+        trigger_rule=TriggerRule.ALL_DONE,  # 모든 동적 태스크가 완료된 후에 실행
+    )
+    
+    for task in dynamic_tasks:
+        task >> complete
