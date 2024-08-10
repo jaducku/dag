@@ -33,11 +33,12 @@ def check_task_statuses(dag_id, execution_date=None):
 with DAG('task_check',
          start_date=days_ago(1),
          schedule_interval='*/1 * * * *',) as dag:
-
+    task_id = 'check_task_states'
     # 전체 Task 상태를 확인하는 Task
     check_task_states = PythonOperator(
-        task_id='check_task_states',
+        task_id=task_id,
         python_callable=check_task_statuses,
+        op_args=[task_id],
         dag=dag
     )
 
