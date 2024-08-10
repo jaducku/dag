@@ -3,6 +3,8 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
 from datetime import datetime, timedelta
+import time
+import random
 
 default_args = {
     'owner': 'airflow',
@@ -14,6 +16,7 @@ default_args = {
 def my_task(task_id):
     large_list = [0.0] * 3_750_000
     print(f"Task {task_id} executed")
+    time.sleep(random.uniform(40, 90))
 
 with DAG(
     'my_dynamic_dag',
