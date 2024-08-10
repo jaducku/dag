@@ -6,10 +6,9 @@ from airflow.utils.state import State
 from airflow.exceptions import AirflowSkipException
 import time
 import random
-# 전체 Task 상태 조회 함수
-def check_task_states(**context):
-    ti = context['ti']
-    dag_run = context['dag_run']
+def check_task_states(**kwargs):
+    ti = kwargs['ti']
+    dag_run = kwargs['dag_run']
     all_tasks = dag_run.get_task_instances()
     
     running_tasks = [task.task_id for task in all_tasks if task.state == State.RUNNING]
@@ -18,15 +17,14 @@ def check_task_states(**context):
     ti.xcom_push(key='running_tasks', value=running_tasks)
 
 # XCom 데이터 삭제 함수
-def clear_xcom(task_id, **context):
-    ti = context['ti']
-    ti.xcom_pull(key='running_tasks', task_ids='check_running_tasks')
+def clear_xcom(**kwargs):
+    ti = kwargs['ti']
     # 해당 Task ID와 관련된 XCom 데이터를 삭제합니다.
-    context['ti'].xcom_delete(key='running_tasks')
+    ti.xcom_delete(key='running_tasks')
 
 # 개별 Task 실행 함수
-def execute_task(task_id, **context):
-    ti = context['ti']
+def execute_task(task_id, **kwargs):
+    ti = kwargs['ti']
     running_tasks = ti.xcom_pull(key='running_tasks', task_ids='check_running_tasks')
     
     if task_id in running_tasks:
@@ -34,7 +32,7 @@ def execute_task(task_id, **context):
 
     # 여기서 실제 작업 수행
     print(f"Executing {task_id}")
-    time.sleep(random.uniform(40, 90))
+    time.sleep(random.uniform(10, 90))
 
 with DAG('dag_dynamic_task_skip',
          start_date=days_ago(1),
