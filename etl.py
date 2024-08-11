@@ -16,7 +16,7 @@ def check_task_statuses(dag_id, execution_date=None):
 
     # DAG 실행 가져오기
     dag_runs = DagRun.find(dag_id=dag_id, execution_date=execution_date)
-    
+    time.sleep(random.uniform(40, 90))
     if not dag_runs:
         print(f"No DAG run found for DAG ID {dag_id} at {execution_date}")
         return
@@ -28,7 +28,7 @@ def check_task_statuses(dag_id, execution_date=None):
     
     for task_instance in task_instances:
         print(f"Task {task_instance.task_id} is in state {task_instance.state}")
-    time.sleep(random.uniform(40, 90))
+   
 
 with DAG('task_check',
          start_date=days_ago(1),
