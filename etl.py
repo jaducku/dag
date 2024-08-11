@@ -14,13 +14,10 @@ dag_name = 'task_check'
 @provide_session
 def check_task_statuses(dag_id, execution_date=None, session=None):
     # execution_date가 없으면 가장 최근 실행을 조회
-    if execution_date is None:
-        dag_run = session.query(DagRun).filter(DagRun.dag_id == dag_id).order_by(DagRun.execution_date.desc()).first()
-    else:
-        dag_run = session.query(DagRun).filter(DagRun.dag_id == dag_id, DagRun.execution_date == execution_date).first()
+    dag_run = session.query(DagRun).filter(DagRun.dag_id == dag_id).order_by(DagRun.execution_date.desc()).first()
 
     if not dag_run:
-        print(f"No DAG run found for DAG ID {dag_id} at {execution_date}")
+        print(f"No DAG run found for DAG ID {dag_id}")
         time.sleep(70)
         return
 
