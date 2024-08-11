@@ -38,7 +38,7 @@ default_args = {
 }
 
 with DAG(
-    'task_check',
+    dag_name,
     default_args=default_args,
     schedule_interval='*/1 * * * *',  # 1분마다 실행
     catchup=False,
