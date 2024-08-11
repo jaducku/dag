@@ -8,7 +8,7 @@ import time
 import random
 from datetime import datetime
 
-
+dag_name = 'task_check'
 # 전체 Task 상태를 확인하고 딕셔너리에 저장하는 함수
 def check_task_statuses(dag_id, execution_date=None):
     # execution_date가 없으면 가장 최근 실행을 조회
@@ -48,7 +48,7 @@ with DAG(
     check_task_states = PythonOperator(
         task_id=task_id,
         python_callable=check_task_statuses,
-        op_args=[task_id],
+        op_args=[dag_name],
         dag=dag
     )
 
