@@ -29,10 +29,20 @@ def check_task_statuses(dag_id, execution_date=None):
     for task_instance in task_instances:
         print(f"Task {task_instance.task_id} is in state {task_instance.state}")
    
+default_args = {
+    'owner': 'airflow',
+    'start_date': datetime(2023, 8, 10),
+    'retries': 1,
+    'retry_delay': 1,
+}
 
-with DAG('task_check',
-         start_date=days_ago(1),
-         schedule_interval='*/1 * * * *',) as dag:
+with DAG(
+    'task_check',
+    default_args=default_args,
+    schedule_interval='*/1 * * * *',  # 1분마다 실행
+    catchup=False,
+) as dag:
+    
     task_id = 'check_task_states'
     # 전체 Task 상태를 확인하는 Task
     check_task_states = PythonOperator(
