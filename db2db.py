@@ -8,15 +8,15 @@ import random
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2023, 8, 10),
+    'start_date': datetime(2024, 8, 10),
     'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(minutes=1),
 }
 
 def my_task(task_id):
     large_list = [0.0] * 3_750_000
     print(f"Task {task_id} executed")
-    time.sleep(random.uniform(40, 90))
+    time.sleep(random.uniform(5, 10))
 
 with DAG(
     'my_dynamic_dag',
